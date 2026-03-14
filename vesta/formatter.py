@@ -7,13 +7,15 @@ def blank_board() -> list[list[int]]:
     return [[BLANK] * COLS for _ in range(ROWS)]
 
 
-def center_line(text: str) -> list[int]:
-    """Encode text and center it within COLS, truncating if too long."""
+def center_line(text: str, width: int | None = None) -> list[int]:
+    """Encode text and center it within *width* columns, truncating if too long."""
+    if width is None:
+        width = COLS
     codes = encode(text)
-    if len(codes) >= COLS:
-        return codes[:COLS]
-    pad = (COLS - len(codes)) // 2
-    row = [BLANK] * COLS
+    if len(codes) >= width:
+        return codes[:width]
+    pad = (width - len(codes)) // 2
+    row = [BLANK] * width
     row[pad:pad + len(codes)] = codes
     return row
 

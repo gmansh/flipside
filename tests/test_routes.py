@@ -69,6 +69,59 @@ def mock_automations():
         yield
 
 
+# --- Preview routes ---
+
+class TestGetPreview:
+    def test_returns_html(self, client, mock_read):
+        resp = client.get("/api/preview")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "html" in data
+        assert "message" in data
+        assert '<div class="sim-board">' in data["html"]
+
+    def test_502_on_read_failure(self, client):
+        with patch("api.routes.client.read", return_value=None):
+            resp = client.get("/api/preview")
+            assert resp.status_code == 502
+
+    def test_color_block_rendered(self, client):
+        board = _blank_board()
+        board[0][0] = 63  # RED
+        with patch("api.routes.client.read", return_value=board):
+            resp = client.get("/api/preview")
+            assert resp.status_code == 200
+            assert "190" in resp.json()["html"]  # RED rgb component
+
+    def test_character_rendered(self, client):
+        board = _blank_board()
+        board[0][0] = 1  # A
+        with patch("api.routes.client.read", return_value=board):
+            resp = client.get("/api/preview")
+            assert resp.status_code == 200
+            assert ">A</div>" in resp.json()["html"]
+
+
+class TestPostPreview:
+    def test_returns_html_without_sending(self, client):
+        board = _blank_board()
+        board[0][0] = 1  # A
+        resp = client.post("/api/preview", json={"message": board})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "html" in data
+        assert ">A</div>" in data["html"]
+        # Should NOT have a "message" key (not reading from device)
+        assert "message" not in data
+
+    def test_color_block(self, client):
+        board = _blank_board()
+        board[0][0] = 65  # YELLOW
+        resp = client.post("/api/preview", json={"message": board})
+        assert resp.status_code == 200
+        assert "220" in resp.json()["html"]  # YELLOW rgb component
+
+
 # --- Message routes ---
 
 class TestGetMessage:

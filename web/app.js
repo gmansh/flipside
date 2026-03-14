@@ -76,6 +76,7 @@ function updateGrid() {
       cell.classList.remove("selected");
     }
   });
+  updatePreview();
 }
 
 function onCellDown(e) {
@@ -366,6 +367,42 @@ async function handleImageUpload(e) {
   imageInput.value = "";
 }
 
+// ---- Board preview (simulator) ----
+function updatePreview() {
+  const el = document.getElementById("live-preview");
+  let html = '<div class="sim-board">';
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const code = board[r][c];
+      if (code === 0) {
+        html += '<div class="sim-cell"></div>';
+      } else if (COLOR_CSS[code]) {
+        html += `<div class="sim-cell" style="background:${COLOR_CSS[code]}"></div>`;
+      } else {
+        const ch = CHARS_DISPLAY[code] ?? "";
+        html += `<div class="sim-cell ch">${ch}</div>`;
+      }
+    }
+  }
+  html += "</div>";
+  el.innerHTML = html;
+}
+
+async function refreshPreview() {
+  try {
+    const resp = await fetch("/api/message");
+    if (resp.ok) {
+      const data = await resp.json();
+      board = data.message;
+      updateGrid();
+    } else {
+      setStatus("Could not read board", "err");
+    }
+  } catch(e) {
+    setStatus("Error: " + e.message, "err");
+  }
+}
+
 // ---- Init ----
 buildGrid();
 buildPicker();
@@ -385,3 +422,4 @@ document.getElementById("btn-toggle-picker").addEventListener("click", () => {
 });
 imageInput.addEventListener("change", handleImageUpload);
 document.getElementById("btn-image-pick").addEventListener("click", () => imageInput.click());
+document.getElementById("btn-refresh-preview").addEventListener("click", refreshPreview);
