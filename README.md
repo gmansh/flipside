@@ -47,7 +47,15 @@ python main.py
 
 Server starts at `http://localhost:8000`.
 
-## Testing
+## Tests
+
+```bash
+pytest tests/ -v
+```
+
+Tests run automatically on every pull request via GitHub Actions. PRs must pass before merging.
+
+## Manual Testing
 
 **Board editor:** Open `http://localhost:8000` in a browser — interactive 6×22 grid, text mode, image import, and template management.
 
