@@ -67,6 +67,23 @@ _CHAR_MAP: dict[str, int] = {
 }
 
 
+# Reverse map: code → display character
+CODE_TO_CHAR: dict[int, str] = {v: k for k, v in _CHAR_MAP.items()}
+CODE_TO_CHAR[BLANK] = " "
+
+# Color block display RGB values (approximate on-screen rendering colors)
+COLOR_RGB: dict[int, tuple[int, int, int]] = {
+    RED:    (190, 40, 40),
+    ORANGE: (210, 120, 40),
+    YELLOW: (220, 204, 60),
+    GREEN:  (50, 160, 50),
+    BLUE:   (50, 80, 200),
+    VIOLET: (130, 50, 180),
+    WHITE:  (240, 240, 240),
+    BLACK:  (17, 17, 17),
+}
+
+
 def encode(text: str) -> list[int]:
     """Convert a string to a list of Vestaboard character codes."""
     return [_CHAR_MAP.get(ch.upper(), BLANK) for ch in text]
