@@ -38,4 +38,9 @@ def index():
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
+    import argparse
+    parser = argparse.ArgumentParser(description="Flipside — Vestaboard manager")
+    parser.add_argument("--port", type=int, default=8000, help="Port to listen on (default: 8000)")
+    parser.add_argument("--host", default="0.0.0.0", help="Host to bind to (default: 0.0.0.0)")
+    args = parser.parse_args()
+    uvicorn.run("main:app", host=args.host, port=args.port, reload=False)

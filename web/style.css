@@ -31,31 +31,58 @@ h2 {
   max-width: 1100px;
 }
 
-/* Board */
+/* ---- Board preview (read-only simulator) ---- */
+.sim-board {
+  display: grid;
+  grid-template-columns: repeat(22, 1fr);
+  gap: 3px;
+  background: #0a0a0a;
+  border: 2px solid #222;
+  border-radius: 6px;
+  padding: 10px;
+  width: 100%;
+}
+.sim-cell {
+  aspect-ratio: 1.2 / 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: clamp(8px, 2vw, 16px);
+  font-weight: 700;
+  background: #1a1a1a;
+  color: transparent;
+  border-radius: 2px;
+}
+.sim-cell.ch {
+  color: #e8e0d0;
+}
+
+/* ---- Board editor (interactive grid) ---- */
 .board-section { display: flex; flex-direction: column; gap: 14px; }
 
 #board {
   display: grid;
   grid-template-columns: repeat(22, 1fr);
-  gap: 2px;
-  background: #111;
-  border: 2px solid #333;
+  gap: 3px;
+  background: #0a0a0a;
+  border: 2px solid #222;
   border-radius: 6px;
   padding: 10px;
   width: 100%;
-  aspect-ratio: 22 / 6;
 }
 
 .cell {
-  aspect-ratio: 1;
+  aspect-ratio: 1.2 / 2;
   border-radius: 2px;
-  background: #222;
+  background: #1a1a1a;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.5rem;
-  font-weight: bold;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: clamp(8px, 2vw, 16px);
+  font-weight: 700;
   color: transparent;
   transition: opacity 0.1s;
   user-select: none;
@@ -73,16 +100,15 @@ h2 {
 .cell[data-code="68"] { background: #8232b4; }
 .cell[data-code="69"] { background: #f0f0f0; }
 .cell[data-code="70"] { background: #111; border: 1px solid #333; }
-.cell[data-code="0"]  { background: #222; }
+.cell[data-code="0"]  { background: #1a1a1a; }
 
-/* Letter cells */
+/* Letter/symbol cells — black flap with white/cream text */
 .cell[data-code]:not([data-code="0"]):not([data-code="63"]):not([data-code="64"]):not([data-code="65"]):not([data-code="66"]):not([data-code="67"]):not([data-code="68"]):not([data-code="69"]):not([data-code="70"]) {
-  background: #f0f0f0;
-  color: #1a1a1a;
-  font-size: clamp(5px, 1.5vw, 11px);
+  background: #1a1a1a;
+  color: #e8e0d0;
 }
 
-/* Controls */
+/* ---- Controls ---- */
 .controls { display: flex; flex-direction: column; gap: 12px; }
 
 .panel {
