@@ -1,8 +1,6 @@
 import re
 from vesta.character_codes import encode, BLANK
-
-ROWS = 6
-COLS = 22
+from config import BOARD_ROWS as ROWS, BOARD_COLS as COLS
 
 
 def blank_board() -> list[list[int]]:

@@ -1,5 +1,6 @@
 from PIL import Image
 from vesta.character_codes import BLACK, WHITE, RED, ORANGE, YELLOW, GREEN, BLUE, VIOLET
+from config import BOARD_ROWS as ROWS, BOARD_COLS as COLS
 
 # Vestaboard color palette: code → RGB
 _PALETTE: list[tuple[int, tuple[int, int, int]]] = [
@@ -12,10 +13,6 @@ _PALETTE: list[tuple[int, tuple[int, int, int]]] = [
     (BLUE,   (50,  80,  200)),
     (VIOLET, (130, 50,  180)),
 ]
-
-ROWS = 6
-COLS = 22
-
 
 def _nearest_color(r: int, g: int, b: int) -> int:
     best_code, best_dist = BLACK, float("inf")
