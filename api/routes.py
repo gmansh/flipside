@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 import vesta.client as client
 from vesta.formatter import make_board
+from vesta.character_codes import CODE_TO_CHAR, COLOR_RGB
 from image.pixelmap import pixelmap_bytes
 import automations.scheduler as scheduler
 
@@ -38,6 +39,43 @@ class AnimatedMessage(BaseModel):
 class TemplateBody(BaseModel):
     name: str
     message: list[list[int]]
+
+
+# --- Preview ---
+
+def _board_to_html(board: list[list[int]]) -> str:
+    """Render a board as a standalone HTML snippet for preview."""
+    cells = []
+    for row in board:
+        for code in row:
+            if code == 0:
+                cells.append('<div class="sim-cell"></div>')
+            elif code in COLOR_RGB:
+                r, g, b = COLOR_RGB[code]
+                cells.append(
+                    f'<div class="sim-cell" style="background:rgb({r},{g},{b})"></div>'
+                )
+            else:
+                ch = CODE_TO_CHAR.get(code, "")
+                cells.append(
+                    f'<div class="sim-cell ch">{ch}</div>'
+                )
+    return '<div class="sim-board">' + "".join(cells) + "</div>"
+
+
+@router.get("/preview")
+def get_preview():
+    """Return an HTML preview of the current board state."""
+    board = client.read()
+    if board is None:
+        raise HTTPException(status_code=502, detail="Could not read board state")
+    return {"html": _board_to_html(board), "message": board}
+
+
+@router.post("/preview")
+def post_preview(body: RawMessage):
+    """Return an HTML preview for an arbitrary board without sending it."""
+    return {"html": _board_to_html(body.message)}
 
 
 # --- Message routes ---

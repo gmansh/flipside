@@ -42,10 +42,45 @@ cp .env.example .env
 ## Running
 
 ```bash
+# Quick start
+./start.sh
+
+# Or with options
+./start.sh --port 9000 --host 127.0.0.1
+
+# Or directly
 python main.py
 ```
 
 Server starts at `http://localhost:8000`.
+
+## Board Simulator
+
+Preview how boards will look without sending to the physical device:
+
+```bash
+# Read and display the current board in the terminal
+python simulate.py live
+
+# Preview all weather icons
+python simulate.py weather
+
+# Render a saved board JSON file
+python simulate.py board.json
+
+# Pipe board JSON from stdin
+echo '[[0,1,...], ...]' | python simulate.py -
+```
+
+The simulator is also importable:
+
+```python
+from simulate import render_board
+render_board(board, label="My Board")
+```
+
+The web UI also has a **Board Preview** panel in the sidebar for previewing
+the current board state or the editor contents without sending to the device.
 
 ## Tests
 
@@ -103,6 +138,8 @@ curl -X POST localhost:8000/api/message/image \
 | `POST` | `/api/message/text` | Send `{text, valign}` — auto-formats and centers |
 | `POST` | `/api/message/image` | Upload image → pixelmap → send |
 | `POST` | `/api/message/animated` | Send with animation strategy |
+| `GET` | `/api/preview` | HTML preview of the current board |
+| `POST` | `/api/preview` | HTML preview for an arbitrary board (no send) |
 | `GET` | `/api/automations` | List automations + next run time |
 | `POST` | `/api/automations/{name}/trigger` | Manually trigger an automation |
 | `GET` | `/api/templates` | List saved templates |
@@ -116,6 +153,8 @@ Single process: `main.py` starts both the FastAPI web server and the APScheduler
 ```
 flipside/
 ├── main.py              # entry point: FastAPI app + scheduler startup
+├── start.sh             # convenience script to start the server
+├── simulate.py          # terminal board simulator
 ├── config.py            # env config via python-dotenv
 ├── vesta/
 │   ├── client.py        # Vestaboard local API wrapper (httpx)
