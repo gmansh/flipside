@@ -33,6 +33,8 @@ cp .env.example .env
 | `VESTABOARD_LOCAL_IP` | Local IP of your Vestaboard | `192.168.1.42` |
 | `VESTABOARD_LOCAL_API_KEY` | API key from the Vestaboard app | *(required)* |
 | `VESTABOARD_PORT` | Local API port | `7000` |
+| `BOARD_ROWS` | Number of rows on the board | `6` |
+| `BOARD_COLS` | Number of columns on the board | `22` |
 | `WEATHER_LAT` | Latitude for weather automation | `37.7749` |
 | `WEATHER_LON` | Longitude for weather automation | `-122.4194` |
 | `WEATHER_SCHEDULE` | Cron schedule for weather updates | `0 7 * * *` (7am daily) |
