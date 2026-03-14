@@ -1,0 +1,63 @@
+import asyncio
+import logging
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+from automations.base import BaseAutomation
+import vesta.client as client
+
+logger = logging.getLogger(__name__)
+
+_scheduler = BackgroundScheduler()
+_automations: dict[str, BaseAutomation] = {}
+
+
+def register(automation: BaseAutomation) -> None:
+    """Register an automation and schedule it via cron."""
+    _automations[automation.name] = automation
+
+    def _job():
+        loop = asyncio.new_event_loop()
+        try:
+            board = loop.run_until_complete(automation.run())
+            client.send(board)
+            logger.info(f"Automation '{automation.name}' sent board successfully.")
+        except Exception as e:
+            logger.error(f"Automation '{automation.name}' failed: {e}")
+        finally:
+            loop.close()
+
+    parts = automation.schedule.split()
+    trigger = CronTrigger(
+        minute=parts[0],
+        hour=parts[1],
+        day=parts[2],
+        month=parts[3],
+        day_of_week=parts[4],
+    )
+    _scheduler.add_job(_job, trigger=trigger, id=automation.name, replace_existing=True)
+    logger.info(f"Registered automation '{automation.name}' with schedule '{automation.schedule}'")
+
+
+def get_automations() -> dict[str, BaseAutomation]:
+    return _automations
+
+
+def get_jobs() -> list[dict]:
+    jobs = []
+    for job in _scheduler.get_jobs():
+        jobs.append({
+            "name": job.id,
+            "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
+            "schedule": _automations[job.id].schedule if job.id in _automations else None,
+        })
+    return jobs
+
+
+def start() -> None:
+    _scheduler.start()
+    logger.info("Scheduler started.")
+
+
+def stop() -> None:
+    _scheduler.shutdown(wait=False)
+    logger.info("Scheduler stopped.")

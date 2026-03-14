@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flipside — Vestaboard Editor</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <h1>Flipside</h1>
+
+  <div class="layout">
+    <!-- Main board area -->
+    <div class="board-section">
+      <div id="board"></div>
+      <div id="status"></div>
+
+      <!-- Send controls -->
+      <div class="panel">
+        <h2>Send</h2>
+        <div class="btn-row" style="margin-bottom:8px">
+          <select id="anim-strategy" title="Animation strategy">
+            <option value="none">No animation</option>
+            <option value="column">Column sweep</option>
+            <option value="row">Row sweep</option>
+            <option value="random">Random</option>
+          </select>
+        </div>
+        <div class="btn-row">
+          <button class="primary" id="btn-send">Send Now</button>
+          <button id="btn-read">Read Board</button>
+          <button id="btn-clear">Clear</button>
+        </div>
+      </div>
+
+      <!-- Text input -->
+      <div class="panel">
+        <h2>Text Mode</h2>
+        <textarea id="text-input" placeholder="Type text here&#10;Press Enter for new line&#10;Auto-centers on board"></textarea>
+        <div class="btn-row" style="margin-top:8px">
+          <select id="valign" title="Vertical alignment">
+            <option value="center">Center</option>
+            <option value="top">Top</option>
+            <option value="bottom">Bottom</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+      <!-- Character picker -->
+      <div class="panel">
+        <h2>Character Picker</h2>
+        <button id="btn-toggle-picker" style="margin-bottom:8px;width:100%">Toggle Picker</button>
+        <div id="picker-panel">
+          <div id="char-grid" class="char-grid"></div>
+        </div>
+      </div>
+
+      <!-- Templates -->
+      <div class="panel">
+        <h2>Templates</h2>
+        <div id="template-list" class="template-list" style="margin-bottom:10px">
+          <span style="color:#555;font-size:0.8rem">Loading...</span>
+        </div>
+        <input type="text" id="template-name" placeholder="Template name">
+        <div class="btn-row" style="margin-top:8px">
+          <button id="btn-save-template">Save Current</button>
+        </div>
+      </div>
+
+      <!-- Automations -->
+      <div class="panel">
+        <h2>Automations</h2>
+        <div id="automation-list" class="template-list">
+          <span style="color:#555;font-size:0.8rem">Loading...</span>
+        </div>
+      </div>
+
+      <!-- Image import -->
+      <div class="panel">
+        <h2>Image Import</h2>
+        <p style="font-size:0.75rem;color:#888;margin-bottom:8px">Upload an image — it will be pixelmapped to the board palette and sent.</p>
+        <button id="btn-image-pick">Choose Image</button>
+        <input type="file" id="image-input" accept="image/*" style="display:none">
+        <div id="image-preview-wrap">
+          <div id="image-preview"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
