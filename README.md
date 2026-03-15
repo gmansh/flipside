@@ -85,10 +85,18 @@ the current board state or the editor contents without sending to the device.
 ## Tests
 
 ```bash
-pytest tests/ -v
+# Unit tests (fast, no browser needed)
+pytest tests/ -v -m "not e2e"
+
+# E2E browser tests (requires Playwright)
+pytest tests/e2e/ -v
+
+# Install Playwright browsers (first time only)
+pip install pytest-playwright
+playwright install chromium
 ```
 
-Tests run automatically on every pull request via GitHub Actions. PRs must pass before merging.
+Both suites run automatically on every pull request via GitHub Actions. PRs must pass before merging.
 
 ## Manual Testing
 
