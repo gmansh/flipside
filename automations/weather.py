@@ -25,10 +25,12 @@ W = WHITE
 B = BLUE
 
 ICON_SUN = (
+    (Y, _, _, Y, _, _, Y),
     (_, Y, Y, Y, Y, Y, _),
     (Y, Y, Y, Y, Y, Y, Y),
     (Y, Y, Y, Y, Y, Y, Y),
     (_, Y, Y, Y, Y, Y, _),
+    (Y, _, _, Y, _, _, Y),
 )
 
 ICON_CLOUD = (
