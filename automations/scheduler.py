@@ -11,10 +11,8 @@ _scheduler = BackgroundScheduler()
 _automations: dict[str, BaseAutomation] = {}
 
 
-def register(automation: BaseAutomation) -> None:
-    """Register an automation and schedule it via cron."""
-    _automations[automation.name] = automation
-
+def _make_job(automation: BaseAutomation):
+    """Create a job function for the given automation."""
     def _job():
         loop = asyncio.new_event_loop()
         try:
@@ -25,17 +23,39 @@ def register(automation: BaseAutomation) -> None:
             logger.error(f"Automation '{automation.name}' failed: {e}")
         finally:
             loop.close()
+    return _job
 
-    parts = automation.schedule.split()
-    trigger = CronTrigger(
+
+def _parse_cron(schedule: str) -> CronTrigger:
+    parts = schedule.split()
+    return CronTrigger(
         minute=parts[0],
         hour=parts[1],
         day=parts[2],
         month=parts[3],
         day_of_week=parts[4],
     )
-    _scheduler.add_job(_job, trigger=trigger, id=automation.name, replace_existing=True)
+
+
+def register(automation: BaseAutomation) -> None:
+    """Register an automation and schedule it via cron."""
+    _automations[automation.name] = automation
+    _scheduler.add_job(
+        _make_job(automation),
+        trigger=_parse_cron(automation.schedule),
+        id=automation.name,
+        replace_existing=True,
+    )
     logger.info(f"Registered automation '{automation.name}' with schedule '{automation.schedule}'")
+
+
+def reschedule(name: str, schedule: str) -> None:
+    """Update the cron schedule for a registered automation."""
+    if name not in _automations:
+        return
+    _automations[name].schedule = schedule
+    _scheduler.reschedule_job(name, trigger=_parse_cron(schedule))
+    logger.info(f"Rescheduled automation '{name}' to '{schedule}'")
 
 
 def get_automations() -> dict[str, BaseAutomation]:
