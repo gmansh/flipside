@@ -430,12 +430,52 @@ async function refreshPreview() {
   }
 }
 
+// ---- Board status ----
+let boardOnline = false;
+
+async function checkBoardStatus() {
+  const elOnline = document.getElementById("bs-online");
+  const elIp = document.getElementById("bs-ip");
+  const elPort = document.getElementById("bs-port");
+  const elError = document.getElementById("bs-error");
+  const errorRow = elError.closest(".status-row");
+  try {
+    const resp = await fetch("/api/status");
+    if (!resp.ok) return;
+    const s = await resp.json();
+    const wasOffline = !boardOnline;
+    boardOnline = s.online;
+    elIp.textContent = s.ip;
+    elPort.textContent = s.port;
+    if (s.online) {
+      elOnline.textContent = "Online";
+      elOnline.className = "status-value status-online";
+      errorRow.style.display = "none";
+      if (wasOffline) {
+        showToast("Board is back online", "ok");
+        refreshPreview();
+      }
+    } else {
+      elOnline.textContent = "Offline";
+      elOnline.className = "status-value status-offline";
+      errorRow.style.display = "";
+      elError.textContent = s.error || "Unknown";
+      elError.className = "status-value status-offline";
+    }
+  } catch(e) {
+    elOnline.textContent = "Unknown";
+    elOnline.className = "status-value";
+  }
+}
+
 // ---- Init ----
 buildGrid();
 buildPicker();
 updateGrid();
 loadTemplates();
 loadAutomations();
+checkBoardStatus();
+setInterval(checkBoardStatus, 15000);
 
 textInput.addEventListener("input", applyTextPreview);
 valignSel.addEventListener("change", applyTextPreview);
