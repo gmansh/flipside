@@ -7,3 +7,4 @@ Pillow
 python-multipart
 pytest
 pytest-asyncio
+pytest-playwright

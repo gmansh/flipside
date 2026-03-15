@@ -171,10 +171,23 @@ function applyTextPreview() {
   updateGrid();
 }
 
-// ---- Status ----
+// ---- Status & Toast ----
+function showToast(msg, type = "") {
+  const container = document.getElementById("toast-container");
+  const toast = document.createElement("div");
+  toast.className = "toast" + (type ? " " + type : "");
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add("toast-fade-out");
+    toast.addEventListener("animationend", () => toast.remove());
+  }, 3000);
+}
+
 function setStatus(msg, type = "") {
   statusEl.textContent = msg;
   statusEl.className = type;
+  if (type === "ok" || type === "err") showToast(msg, type);
 }
 
 // ---- API calls ----
@@ -240,11 +253,19 @@ async function loadTemplates() {
     data.templates.forEach(t => {
       const item = document.createElement("div");
       item.className = "template-item";
-      item.innerHTML = `
-        <span title="${t.name}">${t.name}</span>
-        <button onclick="loadTemplate(${JSON.stringify(t.name)})">Load</button>
-        <button class="danger" onclick="deleteTemplate(${JSON.stringify(t.name)})">Del</button>
-      `;
+      const span = document.createElement("span");
+      span.title = t.name;
+      span.textContent = t.name;
+      const loadBtn = document.createElement("button");
+      loadBtn.textContent = "Load";
+      loadBtn.addEventListener("click", () => loadTemplate(t.name));
+      const delBtn = document.createElement("button");
+      delBtn.className = "danger";
+      delBtn.textContent = "Del";
+      delBtn.addEventListener("click", () => deleteTemplate(t.name));
+      item.appendChild(span);
+      item.appendChild(loadBtn);
+      item.appendChild(delBtn);
       templateListEl.appendChild(item);
     });
   } catch(e) {}
@@ -303,16 +324,21 @@ async function loadAutomations() {
       const item = document.createElement("div");
       item.className = "template-item";
       const next = a.next_run ? new Date(a.next_run).toLocaleString() : "—";
-      item.innerHTML = `
-        <span title="Next: ${next}">${a.name}</span>
-        <button onclick="triggerAutomation(${JSON.stringify(a.name)})">Run</button>
-      `;
+      const span = document.createElement("span");
+      span.title = "Next: " + next;
+      span.textContent = a.name;
+      const btn = document.createElement("button");
+      btn.textContent = "Run";
+      btn.addEventListener("click", () => triggerAutomation(a.name));
+      item.appendChild(span);
+      item.appendChild(btn);
       listEl.appendChild(item);
     });
   } catch(e) {}
 }
 
 async function triggerAutomation(name) {
+  showToast(`Running '${name}'...`);
   setStatus(`Running '${name}'...`);
   try {
     const resp = await fetch(`/api/automations/${encodeURIComponent(name)}/trigger`, {method: "POST"});
@@ -322,7 +348,8 @@ async function triggerAutomation(name) {
       updateGrid();
       setStatus(`'${name}' sent!`, "ok");
     } else {
-      setStatus(`Error: ${resp.status}`, "err");
+      const detail = await resp.text();
+      setStatus(`Error: ${resp.status} — ${detail}`, "err");
     }
   } catch(e) {
     setStatus(`Error: ${e.message}`, "err");
