@@ -18,6 +18,13 @@ TEMPLATES_DIR = Path("templates")
 TEMPLATES_DIR.mkdir(exist_ok=True)
 
 
+# --- Board status ---
+
+@router.get("/status")
+def board_status():
+    return client.status()
+
+
 # --- Models ---
 
 class RawMessage(BaseModel):

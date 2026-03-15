@@ -12,5 +12,11 @@ if [ -z "$VIRTUAL_ENV" ] && [ -d .venv ]; then
     source .venv/bin/activate
 fi
 
+# Don't write .pyc files — avoids stale bytecode after code changes
+export PYTHONDONTWRITEBYTECODE=1
+
+# Clear any leftover bytecode from previous runs
+find "$SCRIPT_DIR" -path ./.venv -prune -o -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true
+
 echo "Starting Flipside..."
 exec python main.py "$@"
