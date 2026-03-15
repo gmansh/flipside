@@ -92,12 +92,38 @@ _ICON_COL = 15   # icon starts at column 15 (7 wide → cols 15-21)
 
 class WeatherAutomation(BaseAutomation):
     name = "weather"
-    schedule = WEATHER_SCHEDULE
+
+    def __init__(self):
+        self.schedule = WEATHER_SCHEDULE
+        self.latitude = WEATHER_LAT
+        self.longitude = WEATHER_LON
+
+    def get_param_schema(self) -> list[dict]:
+        return [
+            {"key": "schedule", "label": "Schedule (cron)", "type": "cron", "value": self.schedule},
+            {"key": "latitude", "label": "Latitude", "type": "number", "value": self.latitude},
+            {"key": "longitude", "label": "Longitude", "type": "number", "value": self.longitude},
+        ]
+
+    def get_params(self) -> dict:
+        return {
+            "schedule": self.schedule,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+        }
+
+    def set_params(self, params: dict) -> None:
+        if "schedule" in params:
+            self.schedule = str(params["schedule"])
+        if "latitude" in params:
+            self.latitude = float(params["latitude"])
+        if "longitude" in params:
+            self.longitude = float(params["longitude"])
 
     async def run(self) -> list[list[int]]:
         url = (
             "https://api.open-meteo.com/v1/forecast"
-            f"?latitude={WEATHER_LAT}&longitude={WEATHER_LON}"
+            f"?latitude={self.latitude}&longitude={self.longitude}"
             "&current=temperature_2m,weathercode"
             "&daily=temperature_2m_max,temperature_2m_min"
             "&temperature_unit=fahrenheit"

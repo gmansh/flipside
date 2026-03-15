@@ -143,6 +143,32 @@ def list_automations():
     return {"automations": scheduler.get_jobs()}
 
 
+@router.get("/automations/{name}/settings")
+def get_automation_settings(name: str):
+    automations = scheduler.get_automations()
+    if name not in automations:
+        raise HTTPException(status_code=404, detail=f"Automation '{name}' not found")
+    automation = automations[name]
+    return {"name": name, "schema": automation.get_param_schema(), "params": automation.get_params()}
+
+
+class AutomationSettings(BaseModel):
+    params: dict
+
+
+@router.put("/automations/{name}/settings")
+def update_automation_settings(name: str, body: AutomationSettings):
+    automations = scheduler.get_automations()
+    if name not in automations:
+        raise HTTPException(status_code=404, detail=f"Automation '{name}' not found")
+    automation = automations[name]
+    old_schedule = automation.schedule
+    automation.set_params(body.params)
+    if automation.schedule != old_schedule:
+        scheduler.reschedule(name, automation.schedule)
+    return {"ok": True, "params": automation.get_params()}
+
+
 @router.post("/automations/{name}/trigger")
 async def trigger_automation(name: str):
     automations = scheduler.get_automations()
