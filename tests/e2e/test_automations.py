@@ -40,17 +40,16 @@ class TestTriggerAutomation:
         page.goto(live_server.url)
         run_btn = page.locator("#automation-list button", has_text="Run")
         run_btn.click()
-        # Wait for the success toast (second one after "Running...")
-        success_toast = page.locator(".toast.ok")
+        # Wait for the success toast
+        success_toast = page.locator(".toast.ok", has_text="sent!")
         expect(success_toast).to_be_visible(timeout=10000)
-        expect(success_toast).to_contain_text("sent!")
 
     def test_trigger_updates_editor_grid(self, page, live_server):
         page.goto(live_server.url)
         run_btn = page.locator("#automation-list button", has_text="Run")
         run_btn.click()
         # Wait for success
-        success_toast = page.locator(".toast.ok")
+        success_toast = page.locator(".toast.ok", has_text="sent!")
         expect(success_toast).to_be_visible(timeout=10000)
         # Board should have non-blank cells (weather data)
         non_blank = page.locator('.cell:not([data-code="0"])')
@@ -60,7 +59,7 @@ class TestTriggerAutomation:
         page.goto(live_server.url)
         run_btn = page.locator("#automation-list button", has_text="Run")
         run_btn.click()
-        success_toast = page.locator(".toast.ok")
+        success_toast = page.locator(".toast.ok", has_text="sent!")
         expect(success_toast).to_be_visible(timeout=10000)
         # Preview should have character cells
         preview_chars = page.locator(".sim-cell.ch")
