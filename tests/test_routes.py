@@ -8,6 +8,7 @@ from PIL import Image
 from main import app
 from config import BOARD_ROWS, BOARD_COLS
 from automations.base import BaseAutomation
+import quiet_time
 
 
 def _blank_board():
@@ -259,3 +260,60 @@ class TestTemplates:
         resp = client.get("/api/templates")
         assert resp.status_code == 200
         assert resp.json()["templates"] == []
+
+
+# --- Quiet time routes ---
+
+class TestQuietTime:
+    def setup_method(self):
+        quiet_time._settings.update({"enabled": False, "start_hour": 22, "end_hour": 7})
+
+    def test_get_defaults(self, client):
+        resp = client.get("/api/quiet-time")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["enabled"] is False
+        assert data["start_hour"] == 22
+        assert data["end_hour"] == 7
+
+    def test_put_enable(self, client):
+        resp = client.put("/api/quiet-time", json={"enabled": True})
+        assert resp.status_code == 200
+        assert resp.json()["enabled"] is True
+
+    def test_put_hours(self, client):
+        resp = client.put("/api/quiet-time", json={"start_hour": 23, "end_hour": 6})
+        assert resp.status_code == 200
+        assert resp.json()["start_hour"] == 23
+        assert resp.json()["end_hour"] == 6
+
+    def test_put_partial(self, client):
+        resp = client.put("/api/quiet-time", json={"enabled": True})
+        assert resp.status_code == 200
+        # Hours should remain at defaults
+        assert resp.json()["start_hour"] == 22
+
+    def test_get_reflects_put(self, client):
+        client.put("/api/quiet-time", json={"enabled": True, "start_hour": 20, "end_hour": 5})
+        resp = client.get("/api/quiet-time")
+        data = resp.json()
+        assert data["enabled"] is True
+        assert data["start_hour"] == 20
+        assert data["end_hour"] == 5
+
+    def test_trigger_blocked_during_quiet_time(self, client, mock_automations):
+        with patch("api.routes.quiet_time.is_quiet", return_value=True):
+            resp = client.post("/api/automations/test_auto/trigger")
+            assert resp.status_code == 409
+
+    def test_put_rejects_invalid_hours(self, client):
+        resp = client.put("/api/quiet-time", json={"start_hour": 24})
+        assert resp.status_code == 422
+        resp = client.put("/api/quiet-time", json={"end_hour": -1})
+        assert resp.status_code == 422
+
+    def test_message_returns_409_during_quiet_time(self, client):
+        with patch("api.routes.client.send", return_value=False), \
+             patch("api.routes.quiet_time.is_quiet", return_value=True):
+            resp = client.post("/api/message", json={"message": _blank_board()})
+            assert resp.status_code == 409

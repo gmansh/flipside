@@ -2,6 +2,7 @@ from unittest.mock import patch, MagicMock
 import httpx
 import pytest
 
+import quiet_time
 from vesta.client import send, send_animated, read, _headers
 
 
@@ -74,6 +75,36 @@ class TestSendAnimated:
             assert payload["strategy"] == "row"
             assert payload["stepIntervalMs"] == 50
             assert payload["stepSize"] == 2
+
+
+class TestQuietTimeGating:
+    def setup_method(self):
+        quiet_time._settings.update({"enabled": False, "start_hour": 22, "end_hour": 7})
+
+    def test_send_blocked_during_quiet_time(self):
+        with patch("quiet_time.is_quiet", return_value=True):
+            assert send([[0] * 22] * 6) is False
+
+    def test_send_allowed_outside_quiet_time(self):
+        mock_resp = MagicMock(status_code=200)
+        mock_client = MagicMock()
+        mock_client.__enter__ = MagicMock(return_value=mock_client)
+        mock_client.__exit__ = MagicMock(return_value=False)
+        mock_client.post.return_value = mock_resp
+
+        with patch("quiet_time.is_quiet", return_value=False), \
+             patch("vesta.client.httpx.Client", return_value=mock_client):
+            assert send([[0] * 22] * 6) is True
+
+    def test_send_animated_blocked_during_quiet_time(self):
+        with patch("quiet_time.is_quiet", return_value=True):
+            assert send_animated([[0] * 22] * 6) is False
+
+    def test_send_no_http_call_during_quiet_time(self):
+        with patch("quiet_time.is_quiet", return_value=True), \
+             patch("vesta.client.httpx.Client") as mock_cls:
+            send([[0] * 22] * 6)
+            mock_cls.assert_not_called()
 
 
 class TestRead:
