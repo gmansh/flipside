@@ -78,9 +78,6 @@ class TestSendAnimated:
 
 
 class TestQuietTimeGating:
-    def setup_method(self):
-        quiet_time._settings.update({"enabled": False, "start_hour": 22, "end_hour": 7})
-
     def test_send_blocked_during_quiet_time(self):
         with patch("quiet_time.is_quiet", return_value=True):
             assert send([[0] * 22] * 6) is False
