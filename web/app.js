@@ -418,6 +418,13 @@ async function renderAutomationCard(container, job) {
   nextEl.id = `auto-next-${name}`;
   card.appendChild(nextEl);
 
+  const lastRun = job.last_run ? new Date(job.last_run).toLocaleString() : "Never";
+  const lastEl = document.createElement("div");
+  lastEl.className = "auto-next auto-last";
+  lastEl.textContent = "Last run: " + lastRun;
+  lastEl.id = `auto-last-${name}`;
+  card.appendChild(lastEl);
+
   // Fetch settings
   try {
     const resp = await fetch(`/api/automations/${encodeURIComponent(name)}/settings`);
@@ -763,6 +770,8 @@ async function triggerAutomation(name) {
       board = data.board;
       updateGrid();
       setStatus(`'${name}' sent!`, "ok");
+      const lastEl = document.getElementById(`auto-last-${name}`);
+      if (lastEl) lastEl.textContent = "Last run: " + new Date().toLocaleString();
     } else {
       const detail = await resp.text();
       setStatus(`Error: ${resp.status} — ${detail}`, "err");
