@@ -24,9 +24,12 @@ def _make_job(automation: BaseAutomation):
         loop = asyncio.new_event_loop()
         try:
             board = loop.run_until_complete(automation.run())
-            client.send(board)
-            record_last_run(automation.name)
-            logger.info(f"Automation '{automation.name}' sent board successfully.")
+            ok = client.send(board)
+            if ok:
+                record_last_run(automation.name)
+                logger.info(f"Automation '{automation.name}' sent board successfully.")
+            else:
+                logger.info(f"Automation '{automation.name}' board send skipped (quiet time or error).")
         except Exception as e:
             logger.error(f"Automation '{automation.name}' failed: {e}")
         finally:

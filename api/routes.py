@@ -4,13 +4,14 @@ import os
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, UploadFile, File
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 import vesta.client as client
 from vesta.formatter import make_board
 from vesta.character_codes import CODE_TO_CHAR, COLOR_RGB
 from image.pixelmap import pixelmap_bytes
 import automations.scheduler as scheduler
+import quiet_time
 
 router = APIRouter(prefix="/api")
 
@@ -23,6 +24,28 @@ TEMPLATES_DIR.mkdir(exist_ok=True)
 @router.get("/status")
 def board_status():
     return client.status()
+
+
+# --- Quiet time ---
+
+@router.get("/quiet-time")
+def get_quiet_time():
+    return quiet_time.get_settings()
+
+
+class QuietTimeSettings(BaseModel):
+    enabled: bool | None = None
+    start_hour: int | None = Field(None, ge=0, le=23)
+    end_hour: int | None = Field(None, ge=0, le=23)
+
+
+@router.put("/quiet-time")
+def update_quiet_time(body: QuietTimeSettings):
+    return quiet_time.update_settings(
+        enabled=body.enabled,
+        start_hour=body.start_hour,
+        end_hour=body.end_hour,
+    )
 
 
 # --- Models ---
@@ -85,6 +108,14 @@ def post_preview(body: RawMessage):
     return {"html": _board_to_html(body.message)}
 
 
+def _check_send(ok: bool) -> None:
+    """Raise appropriate error if a board send failed."""
+    if not ok:
+        if quiet_time.is_quiet():
+            raise HTTPException(status_code=409, detail="Quiet time is active")
+        raise HTTPException(status_code=502, detail="Failed to send to board")
+
+
 # --- Message routes ---
 
 @router.get("/message")
@@ -98,8 +129,7 @@ def get_message():
 @router.post("/message")
 def post_message(body: RawMessage):
     ok = client.send(body.message)
-    if not ok:
-        raise HTTPException(status_code=502, detail="Failed to send to board")
+    _check_send(ok)
     return {"ok": True}
 
 
@@ -108,8 +138,7 @@ def post_text(body: TextMessage):
     lines = body.text.split("\n")
     board = make_board(lines, valign=body.valign)
     ok = client.send(board)
-    if not ok:
-        raise HTTPException(status_code=502, detail="Failed to send to board")
+    _check_send(ok)
     return {"ok": True, "board": board}
 
 
@@ -118,8 +147,7 @@ async def post_image(file: UploadFile = File(...)):
     data = await file.read()
     board = pixelmap_bytes(data)
     ok = client.send(board)
-    if not ok:
-        raise HTTPException(status_code=502, detail="Failed to send to board")
+    _check_send(ok)
     return {"ok": True, "board": board}
 
 
@@ -131,8 +159,7 @@ def post_animated(body: AnimatedMessage):
         step_interval_ms=body.step_interval_ms,
         step_size=body.step_size,
     )
-    if not ok:
-        raise HTTPException(status_code=502, detail="Failed to send to board")
+    _check_send(ok)
     return {"ok": True}
 
 
@@ -175,10 +202,11 @@ async def trigger_automation(name: str):
     if name not in automations:
         raise HTTPException(status_code=404, detail=f"Automation '{name}' not found")
     automation = automations[name]
+    if quiet_time.is_quiet():
+        raise HTTPException(status_code=409, detail="Quiet time is active")
     board = await automation.run()
     ok = client.send(board)
-    if not ok:
-        raise HTTPException(status_code=502, detail="Failed to send to board")
+    _check_send(ok)
     scheduler.record_last_run(name)
     return {"ok": True, "board": board}
 

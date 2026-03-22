@@ -258,6 +258,16 @@ button.danger:hover { background: #6a2a2a; }
 .status-online { color: #32a032; }
 .status-offline { color: #ff6060; }
 
+/* Quiet time */
+.quiet-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.quiet-toggle-label { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; cursor: pointer; }
+.quiet-toggle-label input { accent-color: #f0c040; width: 16px; height: 16px; cursor: pointer; }
+.quiet-label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.03em; min-width: 36px; }
+.quiet-hours select { background: #111; border: 1px solid #444; border-radius: 4px; color: #e0e0e0; font-family: inherit; font-size: 0.8rem; padding: 4px 6px; cursor: pointer; }
+.quiet-hours.disabled select { opacity: 0.4; pointer-events: none; }
+.quiet-status { font-size: 0.7rem; color: #666; margin-top: 4px; }
+.quiet-status.active { color: #f0c040; }
+
 /* Automation settings */
 .auto-card { border: 1px solid #333; border-radius: 4px; padding: 10px; margin-bottom: 8px; }
 .auto-card:last-child { margin-bottom: 0; }

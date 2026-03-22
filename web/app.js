@@ -893,12 +893,82 @@ async function checkBoardStatus() {
   }
 }
 
+// ---- Quiet time ----
+function formatHour(h) {
+  if (h === 0) return "12:00 AM";
+  if (h < 12) return h + ":00 AM";
+  if (h === 12) return "12:00 PM";
+  return (h - 12) + ":00 PM";
+}
+
+function initQuietTimeSelects() {
+  const startSel = document.getElementById("qt-start");
+  const endSel = document.getElementById("qt-end");
+  for (let h = 0; h < 24; h++) {
+    const label = formatHour(h);
+    startSel.appendChild(new Option(label, h));
+    endSel.appendChild(new Option(label, h));
+  }
+}
+
+async function loadQuietTime() {
+  try {
+    const resp = await fetch("/api/quiet-time");
+    if (!resp.ok) return;
+    const s = await resp.json();
+    document.getElementById("qt-enabled").checked = s.enabled;
+    document.getElementById("qt-start").value = s.start_hour;
+    document.getElementById("qt-end").value = s.end_hour;
+    syncQuietTimeUI(s.enabled);
+  } catch(e) { console.error("Failed to load quiet time settings:", e); }
+}
+
+function syncQuietTimeUI(enabled) {
+  const hoursEl = document.getElementById("qt-hours");
+  hoursEl.classList.toggle("disabled", !enabled);
+  const statusEl = document.getElementById("qt-status");
+  if (enabled) {
+    const start = formatHour(+document.getElementById("qt-start").value);
+    const end = formatHour(+document.getElementById("qt-end").value);
+    statusEl.textContent = `Board updates blocked ${start} – ${end}`;
+    statusEl.className = "quiet-status active";
+  } else {
+    statusEl.textContent = "Board updates always allowed";
+    statusEl.className = "quiet-status";
+  }
+}
+
+async function saveQuietTime() {
+  const enabled = document.getElementById("qt-enabled").checked;
+  const start_hour = +document.getElementById("qt-start").value;
+  const end_hour = +document.getElementById("qt-end").value;
+  syncQuietTimeUI(enabled);
+  try {
+    const resp = await fetch("/api/quiet-time", {
+      method: "PUT",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({enabled, start_hour, end_hour})
+    });
+    if (resp.ok) showToast("Quiet time updated", "ok");
+    else showToast("Failed to update quiet time", "err");
+  } catch(e) {
+    showToast("Error: " + e.message, "err");
+  }
+}
+
+initQuietTimeSelects();
+
+document.getElementById("qt-enabled").addEventListener("change", saveQuietTime);
+document.getElementById("qt-start").addEventListener("change", saveQuietTime);
+document.getElementById("qt-end").addEventListener("change", saveQuietTime);
+
 // ---- Init ----
 buildGrid();
 buildPicker();
 updateGrid();
 loadTemplates();
 loadAutomations();
+loadQuietTime();
 checkBoardStatus();
 setInterval(checkBoardStatus, 15000);
 
