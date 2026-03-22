@@ -6,13 +6,6 @@ import pytest
 import quiet_time
 
 
-@pytest.fixture(autouse=True)
-def reset_settings():
-    """Reset quiet time state before each test."""
-    quiet_time._settings.update({"enabled": False, "start_hour": 22, "end_hour": 7})
-    yield
-
-
 class TestGetSettings:
     def test_returns_defaults(self):
         s = quiet_time.get_settings()

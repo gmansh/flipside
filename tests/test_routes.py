@@ -265,9 +265,6 @@ class TestTemplates:
 # --- Quiet time routes ---
 
 class TestQuietTime:
-    def setup_method(self):
-        quiet_time._settings.update({"enabled": False, "start_hour": 22, "end_hour": 7})
-
     def test_get_defaults(self, client):
         resp = client.get("/api/quiet-time")
         assert resp.status_code == 200

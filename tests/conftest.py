@@ -1,6 +1,16 @@
 import pytest
 from unittest.mock import patch
 
+import quiet_time
+
+
+@pytest.fixture(autouse=True)
+def _reset_quiet_time():
+    """Ensure quiet time is disabled for every test unless explicitly configured."""
+    quiet_time._settings.update({"enabled": False, "start_hour": 22, "end_hour": 7})
+    yield
+    quiet_time._settings.update({"enabled": False, "start_hour": 22, "end_hour": 7})
+
 
 @pytest.fixture
 def board_4x10():
