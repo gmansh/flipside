@@ -179,6 +179,7 @@ async def trigger_automation(name: str):
     ok = client.send(board)
     if not ok:
         raise HTTPException(status_code=502, detail="Failed to send to board")
+    scheduler.record_last_run(name)
     return {"ok": True, "board": board}
 
 

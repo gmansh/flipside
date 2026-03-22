@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from datetime import datetime, timezone
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from automations.base import BaseAutomation
@@ -9,6 +10,12 @@ logger = logging.getLogger(__name__)
 
 _scheduler = BackgroundScheduler()
 _automations: dict[str, BaseAutomation] = {}
+_last_runs: dict[str, str] = {}
+
+
+def record_last_run(name: str) -> None:
+    """Record the current time as the last run time for an automation."""
+    _last_runs[name] = datetime.now(timezone.utc).isoformat()
 
 
 def _make_job(automation: BaseAutomation):
@@ -18,6 +25,7 @@ def _make_job(automation: BaseAutomation):
         try:
             board = loop.run_until_complete(automation.run())
             client.send(board)
+            record_last_run(automation.name)
             logger.info(f"Automation '{automation.name}' sent board successfully.")
         except Exception as e:
             logger.error(f"Automation '{automation.name}' failed: {e}")
@@ -68,6 +76,7 @@ def get_jobs() -> list[dict]:
         jobs.append({
             "name": job.id,
             "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
+            "last_run": _last_runs.get(job.id),
             "schedule": _automations[job.id].schedule if job.id in _automations else None,
         })
     return jobs
