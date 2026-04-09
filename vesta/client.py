@@ -3,7 +3,6 @@ import logging
 import httpx
 
 from config import VESTABOARD_BASE_URL, VESTABOARD_LOCAL_API_KEY, VESTABOARD_LOCAL_IP, VESTABOARD_PORT
-import quiet_time
 
 logger = logging.getLogger(__name__)
 
@@ -44,9 +43,6 @@ def status() -> dict:
 
 def send(chars: list[list[int]]) -> bool:
     """Send a 6x22 character code array to the board."""
-    if quiet_time.is_quiet():
-        logger.info("Quiet time active — skipping board send.")
-        return False
     try:
         with httpx.Client(timeout=10) as c:
             resp = c.post(
@@ -67,9 +63,6 @@ def send_animated(
     step_size: int = 1,
 ) -> bool:
     """Send a message with an animation strategy."""
-    if quiet_time.is_quiet():
-        logger.info("Quiet time active — skipping animated board send.")
-        return False
     try:
         with httpx.Client(timeout=10) as c:
             resp = c.post(

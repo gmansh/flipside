@@ -78,30 +78,29 @@ class TestSendAnimated:
 
 
 class TestQuietTimeGating:
-    def test_send_blocked_during_quiet_time(self):
-        with patch("quiet_time.is_quiet", return_value=True):
-            assert send([[0] * 22] * 6) is False
+    """Quiet time is enforced at the scheduler level (scheduler._make_job),
+    not in client.send/send_animated.  These tests verify the client no longer
+    blocks on its own."""
 
-    def test_send_allowed_outside_quiet_time(self):
+    def test_send_proceeds_even_during_quiet_time(self):
         mock_resp = MagicMock(status_code=200)
         mock_client = MagicMock()
         mock_client.__enter__ = MagicMock(return_value=mock_client)
         mock_client.__exit__ = MagicMock(return_value=False)
         mock_client.post.return_value = mock_resp
 
-        with patch("quiet_time.is_quiet", return_value=False), \
-             patch("vesta.client.httpx.Client", return_value=mock_client):
+        with patch("vesta.client.httpx.Client", return_value=mock_client):
             assert send([[0] * 22] * 6) is True
 
-    def test_send_animated_blocked_during_quiet_time(self):
-        with patch("quiet_time.is_quiet", return_value=True):
-            assert send_animated([[0] * 22] * 6) is False
+    def test_send_animated_proceeds_even_during_quiet_time(self):
+        mock_resp = MagicMock(status_code=200)
+        mock_client = MagicMock()
+        mock_client.__enter__ = MagicMock(return_value=mock_client)
+        mock_client.__exit__ = MagicMock(return_value=False)
+        mock_client.post.return_value = mock_resp
 
-    def test_send_no_http_call_during_quiet_time(self):
-        with patch("quiet_time.is_quiet", return_value=True), \
-             patch("vesta.client.httpx.Client") as mock_cls:
-            send([[0] * 22] * 6)
-            mock_cls.assert_not_called()
+        with patch("vesta.client.httpx.Client", return_value=mock_client):
+            assert send_animated([[0] * 22] * 6) is True
 
 
 class TestRead:

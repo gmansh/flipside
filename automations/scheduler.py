@@ -5,10 +5,11 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from automations.base import BaseAutomation
 import vesta.client as client
+import quiet_time
 
 logger = logging.getLogger(__name__)
 
-_scheduler = BackgroundScheduler()
+_scheduler = BackgroundScheduler(job_defaults={"misfire_grace_time": None, "coalesce": True})
 _automations: dict[str, BaseAutomation] = {}
 _last_runs: dict[str, str] = {}
 
@@ -21,6 +22,9 @@ def record_last_run(name: str) -> None:
 def _make_job(automation: BaseAutomation):
     """Create a job function for the given automation."""
     def _job():
+        if quiet_time.is_quiet():
+            logger.info(f"Quiet time active — skipping automation '{automation.name}'")
+            return
         loop = asyncio.new_event_loop()
         try:
             board = loop.run_until_complete(automation.run())
@@ -29,7 +33,7 @@ def _make_job(automation: BaseAutomation):
                 record_last_run(automation.name)
                 logger.info(f"Automation '{automation.name}' sent board successfully.")
             else:
-                logger.info(f"Automation '{automation.name}' board send skipped (quiet time or error).")
+                logger.info(f"Automation '{automation.name}' board send skipped.")
         except Exception as e:
             logger.error(f"Automation '{automation.name}' failed: {e}")
         finally:

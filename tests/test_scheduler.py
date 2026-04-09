@@ -1,7 +1,8 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 from automations.base import BaseAutomation
 import automations.scheduler as scheduler
+import quiet_time
 
 
 class DummyAutomation(BaseAutomation):
@@ -10,6 +11,37 @@ class DummyAutomation(BaseAutomation):
 
     async def run(self):
         return [[0] * 22 for _ in range(6)]
+
+
+class TestMisfireGraceTime:
+    def test_scheduler_allows_late_jobs(self):
+        """misfire_grace_time=None means jobs always run even after machine sleep."""
+        defaults = scheduler._scheduler._job_defaults
+        assert defaults.get("misfire_grace_time") is None
+
+
+class TestQuietTimeSkip:
+    def test_job_skips_automation_run_during_quiet_time(self):
+        auto = DummyAutomation()
+        auto.run = AsyncMock(return_value=[[0] * 22 for _ in range(6)])
+        job_fn = scheduler._make_job(auto)
+
+        with patch.object(quiet_time, "is_quiet", return_value=True):
+            job_fn()
+
+        auto.run.assert_not_called()
+
+    def test_job_runs_automation_outside_quiet_time(self):
+        auto = DummyAutomation()
+        auto.run = AsyncMock(return_value=[[0] * 22 for _ in range(6)])
+        job_fn = scheduler._make_job(auto)
+
+        with patch.object(quiet_time, "is_quiet", return_value=False), \
+             patch("automations.scheduler.client") as mock_client:
+            mock_client.send.return_value = True
+            job_fn()
+
+        auto.run.assert_called_once()
 
 
 class TestScheduler:
