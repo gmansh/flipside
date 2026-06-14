@@ -1,7 +1,7 @@
 from datetime import datetime
 
 _settings = {
-    "enabled": False,
+    "enabled": True,
     "start_hour": 22,
     "end_hour": 7,
 }
