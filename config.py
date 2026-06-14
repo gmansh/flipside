@@ -13,4 +13,4 @@ BOARD_COLS = int(os.getenv("BOARD_COLS", "22"))
 
 WEATHER_LAT = float(os.getenv("WEATHER_LAT", "37.7749"))
 WEATHER_LON = float(os.getenv("WEATHER_LON", "-122.4194"))
-WEATHER_SCHEDULE = os.getenv("WEATHER_SCHEDULE", "0 7 * * *")
+WEATHER_SCHEDULE = os.getenv("WEATHER_SCHEDULE", "0 */2 * * *")
